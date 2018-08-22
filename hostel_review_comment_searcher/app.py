@@ -4,65 +4,78 @@ from __future__ import unicode_literals
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
+from selenium import webdriver
 
-from hostel_review_comment_searcher.models import BookingHostel, HostelWorldHostel
-from hostel_review_comment_searcher.util import get_page_dynamic
+
+from hostel_review_comment_searcher.models import Booking, HostelWorld, Google, Hostel
+from hostel_review_comment_searcher.util import merge_results
+
+session = None
+
+
+def get_session():
+    global session
+    if session is None:
+        options = webdriver.ChromeOptions()
+        options.add_argument("headless")
+        session = webdriver.Chrome(chrome_options=options)
+    return session
 
 
 def search(
-    loc_query,
+    loc_query="cuenca, ecuador",
     guests=1,
-    checkin=date.today(),
-    checkout=date.today() + relativedelta(days=1),
+    checkin=date.today() + relativedelta(days=1),
+    days=1,
+    min_match=80,
 ):
-    res = []
-    res.extend(search_booking(loc_query, guests, checkin, checkout))
-    res.extend(search_hostelworld(loc_query, guests, checkin, checkout))
-    return res
+    session = get_session()
+    booking = Booking(session)
+    hostelworld = HostelWorld(session)
+    google = Google(session)
+
+    b_results = booking.search(loc_query, guests, checkin, days)
+    hw_results = hostelworld.search(loc_query, guests, checkin, days)
+
+    results = merge_results(hw_results, b_results, min_match)
+    final = []
+    for key in results.keys():
+        result = results[key]
+        hostel = {}
+        google_info = google.get_hostel_info(key, loc_query)
+        if google_info:
+            hostel["google"] = google_info
+
+        hw_url = result.get("hostelworld")
+        if hw_url:
+            hostel["hostelworld"] = hostelworld.get_hostel_info(hw_url)
+
+        b_url = result.get("booking")
+        if b_url:
+            hostel["booking"] = booking.get_hostel_info(b_url)
+        h = Hostel(session, hostel)
+        # h.fetch_reviews()
+        final.append(h)
+
+    return sorted(final, key=lambda x: x.avg_rating, reverse=True)
 
 
-def search_booking(
-    loc_query,
-    guests=1,
-    checkin=date.today(),
-    checkout=date.today() + relativedelta(days=1),
-):
-    params = {
-        "nflt": "ht_id=203;ht_id=216;ht_id=208;review_score=80;",
-        "ss": loc_query,
-        "group_adults": guests,
-        "checkin_year_month_monthday": checkin,
-        "checkout_year_month_monthday": checkout,
-    }
-    page = get_page_dynamic("https://www.booking.com/searchresults.en-gb.html", params)
-    results = page.findAll(class_="hotel_name_link")
+def search_results(results, keyword, topn=10):
+    res = results[: min(topn, len(results))]
+    for result in res:
+        if len(result.reviews) == 0:
+            result.fetch_reviews()
 
-    next_page = page.find("a", class_="paging-next")
-
-    while next_page:
-        page = get_page_dynamic("https://www.booking.com/" + next_page["href"])
-        results.extend(page.findAll(class_="hotel_name_link"))
-        next_page = page.find("a", class_="paging-next")
-
-    # need to strip the href because it has a leading \n
-    return [BookingHostel(result["href"].strip()) for result in results]
-
-
-def search_hostelworld(
-    loc_query,
-    guests=1,
-    checkin=date.today(),
-    checkout=date.today() + relativedelta(days=1),
-):
-    params = {
-        "number_of_guests": guests,
-        "date_from": checkin,
-        "date_to": checkout,
-        "search_keywords": loc_query,
-    }
-
-    page = get_page_dynamic("https://www.hostelworld.com/search", params)
-
-    results = page.findAll("a", class_="hwta-property-link")
-
-    return [HostelWorldHostel(url) for url in set(result["href"] for result in results)]
+    for ix, hostel in enumerate(sorted(res, key=lambda x: x.rating, reverse=True)):
+        print(ix)
+        print(hostel["name"])
+        print(hostel["rating"])
+        print(round(hostel.avg_rating, 2))
+        print(round(hostel.rating, 2))
+        print(hostel["url"])
+        print(hostel["address"])
+        print(
+            "---------".join([x.__unicode__() for x in hostel.search_reviews(keyword)])
+        )
+        print("============================================")
+        print("")

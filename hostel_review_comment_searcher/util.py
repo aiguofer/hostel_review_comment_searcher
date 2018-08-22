@@ -4,42 +4,32 @@ from __future__ import unicode_literals
 import math
 import re
 import time
-
-from bs4 import BeautifulSoup
-
-# from requests_html import HTMLSession
-from requests import Request, get
-from selenium import webdriver
-
-url = "https://www.booking.com/hotel/es/green-river-hostel.en-gb.html"
-
-google_key = "<put_your_key_here>"
-
-options = webdriver.ChromeOptions()
-options.add_argument("headless")
-session = webdriver.Chrome(chrome_options=options)
-# requests_session = HTMLSession()
+from fuzzywuzzy import fuzz
 
 
-# def get_page_dynamic_requests(url, params={}):
-#     full_url = Request("GET", url, params=params).prepare().url
-#     html = requests_session.get(full_url).html
-#     html.render()
-#     return BeautifulSoup(html.raw_html, "lxml")
+def merge_results(hw_results={}, b_results={}, min_match=80):
+    same_name = []
+    for hw_result_name in hw_results.keys():
+        for b_result_name in b_results.keys():
+            ratio = fuzz.ratio(hw_result_name, b_result_name)
+            if ratio > min_match:
+                print("{0} - {1} : {2}".format(hw_result_name, b_result_name, ratio))
+                same_name.append((hw_result_name, b_result_name))
 
+    mapping = dict(same_name)
 
-def get_page_dynamic(url, params={}, scroll=False):
-    full_url = Request("GET", url, params=params).prepare().url
-    session.get(full_url)
-    html = session.page_source
-    if scroll:
-        scroll_to_bottom()
-        html = session.page_source
-    return BeautifulSoup(html, "lxml")
+    final = {}
+    for key in hw_results.keys():
+        record = final.get(key, {})
+        record["hostelworld"] = hw_results[key]
+        final[mapping.get(key, key)] = record
 
+    for key in b_results.keys():
+        record = final.get(key, {})
+        record["booking"] = b_results[key]
+        final[key] = record
 
-def get_page(url, params={}):
-    return BeautifulSoup(get(url, params).text, "lxml")
+    return final
 
 
 def strip_url(url):
@@ -50,13 +40,13 @@ def mean(numbers):
     return float(sum(numbers)) / max(len(numbers), 1)
 
 
-def starsort(review):
+def starsort(reviews):
     """
     http://www.evanmiller.org/ranking-items-with-star-ratings.html
     """
     ns = [0.0 for _ in range(10)]
 
-    for r in review.reviews:
+    for r in reviews:
         ns[int(round(r.score, 0)) - 1] += 1.0
 
     ns.reverse()
@@ -97,34 +87,3 @@ def search_comments(results, query):
             print()
 
     return res
-
-
-def scroll_to_bottom():
-    SCROLL_PAUSE_TIME = 1
-
-    for i in range(3):
-        try:
-            e = session.find_element_by_class_name("review-dialog-list")
-            break
-        except Exception:
-            if i == 2:
-                raise Exception("Couldn't find reviews")
-
-    # Get scroll height
-    last_height = session.execute_script("return arguments[0].scrollHeight", e)
-
-    session.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", e)
-    while True:
-        # Wait to load page
-        time.sleep(SCROLL_PAUSE_TIME)
-
-        # print('scrolling....')
-
-        # Scroll down to bottom
-        session.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", e)
-
-        # Calculate new scroll height and compare with last scroll height
-        new_height = session.execute_script("return arguments[0].scrollHeight", e)
-        if new_height == last_height:
-            break
-        last_height = new_height
