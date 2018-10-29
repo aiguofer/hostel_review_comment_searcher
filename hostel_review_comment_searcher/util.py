@@ -1,19 +1,36 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import math
 import re
 import time
+
 from fuzzywuzzy import fuzz
 
 
-def merge_results(hw_results={}, b_results={}, min_match=80):
+def clean_name(name, city):
+    clean_name = name.lower()
+    clean_name = re.sub("hostel|hotel|bnb|b&b|hostal|" + city.lower(), "", clean_name)
+    clean_name = clean_name.strip()
+    return clean_name
+
+
+def merge_results(hw_results={}, b_results={}, city="", min_match=80):
     same_name = []
     for hw_result_name in hw_results.keys():
         for b_result_name in b_results.keys():
-            ratio = fuzz.ratio(hw_result_name, b_result_name)
+            ratio = fuzz.ratio(
+                clean_name(hw_result_name, city), clean_name(b_result_name, city)
+            )
             if ratio > min_match:
                 print("{0} - {1} : {2}".format(hw_result_name, b_result_name, ratio))
+                print(
+                    "{0} - {1} : {2}".format(
+                        clean_name(hw_result_name, city),
+                        clean_name(b_result_name, city),
+                        ratio,
+                    )
+                )
                 same_name.append((hw_result_name, b_result_name))
 
     mapping = dict(same_name)
