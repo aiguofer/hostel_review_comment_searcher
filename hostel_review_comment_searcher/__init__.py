@@ -3,6 +3,7 @@
 """Top-level package for Hostel Review Comment Searcher."""
 from __future__ import absolute_import, unicode_literals
 
+import os
 import pickle
 from json import JSONEncoder
 
@@ -28,7 +29,7 @@ __email__ = "aiguo.fernandez@gmail.com"
 
 app = Flask(__name__)
 
-app.config["REDIS_URL"] = "redis://localhost"
+app.config["REDIS_URL"] = os.environ.get("REDIS_URL", "redis://localhost")
 app.register_blueprint(sse, url_prefix="/stream")
 
 app.config.from_object(__name__)
@@ -38,7 +39,9 @@ app.config["ENV"] = "development"
 def get_driver():
     if "driver" not in g:
         options = webdriver.ChromeOptions()
-        options.add_argument("headless")
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         g.driver = webdriver.Chrome(chrome_options=options)
 
     return g.driver
