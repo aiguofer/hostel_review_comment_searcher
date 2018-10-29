@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <title>Hostel Review Comment Searcher</title>
+   </head>
+   <body>
+      {% raw %}
+      <div id="app">
+         <div v-cloak class="container u-max-full-width">
+            <h1>Hostel Review Comment Searcher</h1>
+            <form id="searchform" v-on:submit.prevent="search">
+               <label class="title" for="location">Location</label>
+               <input type="text" id="location" name="location" v-model="form.loc_query">
+               <input class="button-primary" type="submit"
+                      id="submitButton"  name="submitButton" value="Submit">
+            </form>
+            <div class="row">
+               <div class="three columns offset-by-three"><h2>Booking.com</h2></div>
+               <div class="three columns"><h2>HostelWorld</h2></div>
+               <div class="three columns"><h2>Google</h2></div>
+            </div>
+            <div v-for="(hostel, index) in orderBy(hostels, 'rating', -1)">
+               <div class="row">
+                  <div class="three columns">
+                     {{ index + 1 }}
+                     <br/>
+                     Average: {{ hostel.avg_rating.toFixed(2) }}
+                     <br/>
+                     Starsort: {{ hostel.rating.toFixed(2) }}
+                  </div>
+                  <div class="three columns"
+                       v-bind:class="{'offset-by-three': (site == 'hostelworld' & Object.keys(hostel['booking']).length == 0) | (site == 'google' & Object.keys(hostel['hostelworld']).length == 0)}"
+                       v-for="site in ['booking', 'hostelworld', 'google']">
+                     <div class="row">
+                        <div class="twelve columns">
+                           <a :href="hostel[site].url" target="_blank">
+                              <b>{{ hostel[site].name }}</b>
+                           </a>
+                        </div>
+                     </div>
+                     <div class="row">
+                        <div class="twelve columns" v-if="hostel[site].rating != null | hostel[site].number_of_ratings != null">
+                           {{ hostel[site].rating }} with
+                           {{ hostel[site].number_of_ratings }}
+                           reviews
+                        </div>
+                     </div>
+                     <div class="row">
+                        <div class="twelve columns">
+                           {{ hostel[site].price }}
+                        </div>
+                     </div>
+                     <div class="row">
+                        <div class="twelve columns">
+                           {{ hostel[site].address }}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="nine columns offset-by-three" style="overflow-y:scroll;max-height:400px">
+                     <div v-for="review in hostel.reviews">
+                        <div class="row">
+                           {{ review.score }} - {{ review.source }}
+                        </div>
+                        <div class="row">
+                           {{ review.comment }}
+                        </div>
+                        <br/>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+      {% endraw %}
+      <style>
+      [v-cloak] {
+         display: none;
+      }
+      </style>
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"/>
+      <script src="http://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/vue2-filters/dist/vue2-filters.min.js"></script>
+
+      <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+      <script src="{{ url_for('static', filename='main.js') }}" type="module"></script>
+      <script>
+      window.appConfig = {
+         sse_stream: "{{ url_for('sse.stream') }}",
+         endpoints: {
+            search: "{{ url_for('search_endpoint') }}"
+         }
+      };
+      </script>
+   </body>
+</html>
