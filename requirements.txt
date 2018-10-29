@@ -11,3 +11,4 @@ flask
 gevent
 flask_sse
 serpy
+bs4
