@@ -5,4 +5,4 @@ WORKDIR /code
 RUN pip install -r requirements.txt && \
         adduser app
 USER app
-CMD gunicorn hostel_review_comment_searcher.routes:app --worker-class gevent --bind 0.0.0.0:5000
+CMD gunicorn hostel_review_comment_searcher.routes:app --worker-class gevent --bind 0.0.0.0:$PORT
