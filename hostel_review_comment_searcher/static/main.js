@@ -20,6 +20,10 @@ $(function() {
             console.log("Failed to connect to event stream. Is Redis running?");
          }, false);
 
+         // keep stream alive
+         setInterval(function(){
+            $.get(appConfig.endpoints.ping);
+         }, 27000);
       },
 
       methods: {

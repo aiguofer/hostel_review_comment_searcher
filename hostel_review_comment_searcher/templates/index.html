@@ -90,7 +90,8 @@
       window.appConfig = {
          sse_stream: "{{ url_for('sse.stream') }}",
          endpoints: {
-            search: "{{ url_for('search_endpoint') }}"
+            search: "{{ url_for('search_endpoint') }}",
+            ping: "{{ url_for('ping_endpoint') }}"
          }
       };
       </script>

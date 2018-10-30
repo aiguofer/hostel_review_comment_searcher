@@ -13,9 +13,9 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/reviews")
-def get_reviews():
-    sse.publish({"message": "Hello!"}, type="greeting")
+@app.route("/ping")
+def ping_endpoint():
+    sse.publish({"message": "Hello!"})
     return "Message sent!"
 
 
