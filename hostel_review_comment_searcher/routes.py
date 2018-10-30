@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
-from flask import render_template, request
+from flask import Response, render_template, request
 
 from . import app, sse
 from .models import HostelSerializer
@@ -21,9 +21,13 @@ def get_reviews():
 
 @app.route("/search")
 def search_endpoint():
-    for result in search_city(**request.args):
-        data = HostelSerializer(result).data
-        sse.publish(data, type="search_results")
+    def generator(**args):
+        yield "Starting Search"
+        for result in search_city(**args):
+            data = HostelSerializer(result).data
+            sse.publish(data, type="search_results")
+            yield "Search Results Sent"
+
     # session["results"] = results
 
     # sse.publish(
@@ -42,4 +46,4 @@ def search_endpoint():
     #     type="search_results",
     # )
 
-    return "Search Results Sent"
+    return Response(generator(**request.args), mimetype="text/html")
