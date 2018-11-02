@@ -39,9 +39,9 @@
                   <div class="three columns">
                      {{ index + 1 }}
                      <br/>
-                     Average: {{ hostel.avg_rating.toFixed(2) }}
+                     Average: {{ hostel.avg_rating | currency('') }}
                      <br/>
-                     Starsort: {{ hostel.rating.toFixed(2) }}
+                     Starsort: {{ hostel.rating | currency('') }}
                   </div>
                   <div class="three columns"
                        v-bind:class="{'offset-by-three': (site == 'hostelworld' & Object.keys(hostel['booking']).length == 0) | (site == 'google' & Object.keys(hostel['hostelworld']).length == 0)}"
