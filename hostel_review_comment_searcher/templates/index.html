@@ -8,13 +8,27 @@
       {% raw %}
       <div id="app">
          <div v-cloak class="container u-max-full-width">
-            <h1>Hostel Review Comment Searcher</h1>
-            <form id="searchform" v-on:submit.prevent="search">
-               <label class="title" for="location">Location</label>
-               <input type="text" id="location" name="location" v-model="form.loc_query">
-               <input class="button-primary" type="submit"
-                      id="submitButton"  name="submitButton" value="Submit">
-            </form>
+            <div class="row">
+               <div class="twelve columns">
+                  <h1>Hostel Review Comment Searcher</h1>
+               </div>
+            </div>
+            <div class="row">
+               <div class="twelve columns">
+                  <form id="searchform" v-on:submit.prevent="search">
+                     <label class="title" for="location">Location</label>
+                     <input type="text" id="location" name="location" v-model="form.loc_query">
+                     <input class="button-primary" type="submit"
+                            id="submitButton"  name="submitButton" value="Submit">
+                  </form>
+                  <div class="row">
+                     <div class="twelve columns">
+                        <label class="title" for="keyword">Search for keyword in comments</label>
+                        <input type="text" id="keyword" name="keyword" v-model="keyword">
+                     </div>
+                  </div>
+               </div>
+            </div>
             <div class="row">
                <div class="three columns offset-by-three"><h2>Booking.com</h2></div>
                <div class="three columns"><h2>HostelWorld</h2></div>
@@ -60,12 +74,11 @@
                </div>
                <div class="row">
                   <div class="nine columns offset-by-three" style="overflow-y:scroll;max-height:400px">
-                     <div v-for="review in hostel.reviews">
+                     <div v-if="has_keyword(keyword, review.comment)" v-for="review in hostel.reviews">
                         <div class="row">
                            {{ review.score }} - {{ review.source }}
                         </div>
-                        <div class="row">
-                           {{ review.comment }}
+                        <div v-html="find_keyword(keyword, review.comment)" class="row">
                         </div>
                         <br/>
                      </div>

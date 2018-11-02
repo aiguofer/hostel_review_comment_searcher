@@ -4,8 +4,9 @@ $(function() {
       data: {
          hostels: [],
          form: {
-            loc_query: ""
-         }
+            loc_query: "",
+         },
+         keyword: "",
       },
       created() {
          var _this = this;
@@ -29,9 +30,21 @@ $(function() {
       methods: {
          search: function(event) {
             var posting = $.get(appConfig.endpoints.search, this.form);
+         },
+         has_keyword(keyword, text) {
+            return RegExp(keyword, "i").exec(text) !== null;
+         },
+         find_keyword(keyword, text) {
+            if(!keyword) {
+               return text;
+            }
+            var replaced = text.replace(new RegExp(keyword, "gi"), match => {
+               return '<span style="background-color:yellow"">' + match + '</span>';
+            });
+            return replaced != text ? replaced : null;
          }
       }
    });
-   Vue.use(Vue2Filters);
+
    window.vue = app;
 });
