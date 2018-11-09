@@ -16,7 +16,7 @@ from requests import Request, Session, get
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from . import driver
+from . import get_driver
 from .util import starsort, strip_url
 
 # Workaround for unreliable connections
@@ -48,13 +48,16 @@ class ReviewSerializer(serpy.Serializer):
 
 
 class Website:
+    def __init__(self, driver=None):
+        self.driver = driver or get_driver()
+
     def get_page_dynamic(self, url, params={}, scroll=False):
         full_url = Request("GET", url, params=params).prepare().url
-        driver.get(full_url)
-        html = driver.page_source
+        self.driver.get(full_url)
+        html = self.driver.page_source
         if scroll and hasattr(self, "scroll_to_bottom"):
             self.scroll_to_bottom()
-            html = driver.page_source
+            html = self.driver.page_source
         return BeautifulSoup(html, "lxml")
 
     def get_page(self, url, params={}):
@@ -166,7 +169,7 @@ class Google(Website):
 
         for i in range(3):
             try:
-                e = driver.find_element_by_class_name("review-dialog-list")
+                e = self.driver.find_element_by_class_name("review-dialog-list")
                 break
             except Exception:
                 time.sleep(SCROLL_PAUSE_TIME)
@@ -174,22 +177,26 @@ class Google(Website):
                     print("Couldn't find Google reviews")
                 return
 
-        last_height = driver.execute_script("return arguments[0].scrollHeight", e)
+        last_height = self.driver.execute_script("return arguments[0].scrollHeight", e)
 
-        driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", e)
+        self.driver.execute_script(
+            "arguments[0].scrollTop = arguments[0].scrollHeight", e
+        )
         while True:
             time.sleep(SCROLL_PAUSE_TIME)
 
-            driver.execute_script(
+            self.driver.execute_script(
                 "arguments[0].scrollTop = arguments[0].scrollHeight", e
             )
 
-            new_height = driver.execute_script("return arguments[0].scrollHeight", e)
+            new_height = self.driver.execute_script(
+                "return arguments[0].scrollHeight", e
+            )
             if new_height == last_height:
                 break
             last_height = new_height
 
-        for link in driver.find_elements_by_class_name("review-more-link"):
+        for link in self.driver.find_elements_by_class_name("review-more-link"):
             if link.text:
                 link.click()
 

@@ -36,14 +36,17 @@ app.config.from_object(__name__)
 app.config["ENV"] = "development"
 
 
+def get_new_driver():
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    return webdriver.Chrome(chrome_options=options)
+
+
 def get_driver():
     if "driver" not in g:
-        options = webdriver.ChromeOptions()
-        options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        g.driver = webdriver.Chrome(chrome_options=options)
-
+        g.driver = get_new_driver()
     return g.driver
 
 
