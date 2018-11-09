@@ -29,6 +29,7 @@ $(function() {
 
       methods: {
          search: function(event) {
+            this.hostels = [];
             var posting = $.get(appConfig.endpoints.search, this.form);
          },
          has_keyword(keyword, text) {
