@@ -1,8 +1,8 @@
 fuzzywuzzy
+python-Levenshtein
 flask
 selenium
 future
-python-Levenshtein
 python-dateutil
 requests
 lxml
