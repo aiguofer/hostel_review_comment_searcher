@@ -4,8 +4,6 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
-import pickle
-from json import JSONEncoder
 
 from flask import Flask, g
 from flask_sse import sse
@@ -59,10 +57,3 @@ def teardown_driver(error):
 
 
 driver = LocalProxy(get_driver)
-
-
-def _default(self, obj):
-    return {"_python_object": pickle.dumps(obj).decode("latin1")}
-
-
-JSONEncoder.default = _default

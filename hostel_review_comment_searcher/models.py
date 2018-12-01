@@ -502,10 +502,15 @@ class Hostel:
         ]
 
 
+class HostelField(serpy.Field):
+    def to_value(self, value):
+        return {key: value[key] for key in value.keys() if key != "reviews"}
+
+
 class HostelSerializer(serpy.Serializer):
-    google = serpy.Field()
-    hostelworld = serpy.Field()
-    booking = serpy.Field()
+    google = HostelField()
+    hostelworld = HostelField()
+    booking = HostelField()
     avg_rating = serpy.Field()
     rating = serpy.Field()
     reviews = ReviewSerializer(many=True)
