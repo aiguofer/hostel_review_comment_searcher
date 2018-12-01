@@ -8,6 +8,7 @@ $(function() {
          },
          keyword: "",
       },
+      mixins: [Vue2Filters.mixin],
       created() {
          var _this = this;
          var source = new EventSource(appConfig.sse_stream);
