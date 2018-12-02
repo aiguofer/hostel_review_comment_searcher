@@ -433,12 +433,12 @@ class HostelWorld(Website):
 
 
 class Hostel:
-    def __init__(self, hostel_info):
+    def __init__(self, hostel_info, driver=None):
         self._data = hostel_info
         self._sites = {
-            "google": Google(),
-            "booking": Booking(),
-            "hostelworld": HostelWorld(),
+            "google": Google(driver),
+            "booking": Booking(driver),
+            "hostelworld": HostelWorld(driver),
         }
 
     def __getitem__(self, attr):
